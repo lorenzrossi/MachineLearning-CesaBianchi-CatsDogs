@@ -90,10 +90,10 @@ pip install -r requirements.txt
 
 3. **(Optional) Setup Kaggle API** for dataset download:
    - Go to [Kaggle Account Settings](https://www.kaggle.com/account)
-   - Create an API token and download `kaggle.json`
-   - Place it in:
-     - **Linux/Mac**: `~/.kaggle/kaggle.json`
-     - **Windows**: `C:\Users\<username>\.kaggle\kaggle.json`
+   - Scroll down to the "API" section
+   - Click "Create New API Token" to download `kaggle.json`
+   - Run: `mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json`
+   - **Detailed instructions**: See [SETUP_KAGGLE.md](SETUP_KAGGLE.md) for step-by-step guide and troubleshooting
 
 ## 🏃 Quick Start
 
@@ -420,8 +420,10 @@ Simply download and place the pickle files in `CatsDogs/Pickles/` directory.
 1. **ModuleNotFoundError**
    - **Solution**: Install dependencies with `pip install -r requirements.txt`
 
-2. **Kaggle API Error**
-   - **Solution**: Ensure `kaggle.json` is in the correct location (`~/.kaggle/kaggle.json`)
+2. **Kaggle API Error / Missing Credentials**
+   - **Solution**: See [SETUP_KAGGLE.md](SETUP_KAGGLE.md) for detailed setup instructions
+   - Quick fix: Ensure `kaggle.json` is in `~/.kaggle/kaggle.json` (Mac/Linux) or `C:\Users\<username>\.kaggle\kaggle.json` (Windows)
+   - **Alternative**: Skip download and use pre-prepared pickles from the Google Drive links below
 
 3. **Data Not Found**
    - **Solution**: Run data preparation first: `python data_preparation.py --download`
