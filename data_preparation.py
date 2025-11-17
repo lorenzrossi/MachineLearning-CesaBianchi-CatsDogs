@@ -5,8 +5,17 @@ Data Preparation Script for Cats vs Dogs Dataset
 This script downloads (optional), processes, and prepares the Cats vs Dogs dataset
 for machine learning tasks. It supports both Google Colab and local environments.
 
+Download Options:
+    1. Kaggle API: python data_preparation.py --download
+       (Requires Kaggle API credentials and accepting competition terms)
+    
+    2. Google Drive Pickles: python data_preparation.py --download-pickles
+       (Downloads pre-prepared pickle files - recommended alternative)
+    
+    3. Manual Download: See README.md for direct Google Drive links
+
 Usage:
-    python data_preparation.py [--download] [--base-dir BASE_DIR] [--img-size SIZE] [--channels CHANNELS]
+    python data_preparation.py [--download | --download-pickles] [--base-dir BASE_DIR] [--img-size SIZE] [--channels CHANNELS]
 
 Author: Optimized version of Data_Preparation.ipynb
 """
@@ -82,6 +91,130 @@ def setup_kaggle_api() -> bool:
     return True
 
 
+def download_from_google_drive(file_id: str, output_path: str) -> bool:
+    """
+    Download a file from Google Drive using gdown or direct download.
+    
+    Args:
+        file_id: Google Drive file ID
+        output_path: Path to save the downloaded file
+        
+    Returns:
+        True if download successful, False otherwise
+    """
+    try:
+        # Try using gdown first (more reliable)
+        try:
+            import gdown
+            url = f"https://drive.google.com/uc?id={file_id}"
+            logger.info(f"Downloading from Google Drive using gdown: {file_id}")
+            gdown.download(url, output_path, quiet=False)
+            if os.path.exists(output_path):
+                logger.info(f"Successfully downloaded to {output_path}")
+                return True
+        except ImportError:
+            logger.info("gdown not installed. Installing...")
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "gdown"])
+            import gdown
+            url = f"https://drive.google.com/uc?id={file_id}"
+            logger.info(f"Downloading from Google Drive using gdown: {file_id}")
+            gdown.download(url, output_path, quiet=False)
+            if os.path.exists(output_path):
+                logger.info(f"Successfully downloaded to {output_path}")
+                return True
+        except Exception as e:
+            logger.warning(f"gdown failed: {e}. Trying alternative method...")
+        
+        # Alternative: Try direct download with requests
+        try:
+            import requests
+            url = f"https://drive.google.com/uc?export=download&id={file_id}"
+            logger.info(f"Downloading from Google Drive using requests: {file_id}")
+            response = requests.get(url, stream=True)
+            
+            # Handle large files
+            if 'Content-Disposition' in response.headers:
+                total_size = int(response.headers.get('Content-Length', 0))
+                with open(output_path, 'wb') as f:
+                    downloaded = 0
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total_size > 0:
+                                percent = (downloaded / total_size) * 100
+                                print(f"\rProgress: {percent:.1f}%", end='', flush=True)
+                print()  # New line after progress
+                logger.info(f"Successfully downloaded to {output_path}")
+                return True
+        except ImportError:
+            logger.warning("requests not installed. Install with: pip install requests")
+        except Exception as e:
+            logger.error(f"Direct download failed: {e}")
+        
+        return False
+    except Exception as e:
+        logger.error(f"Failed to download from Google Drive: {e}")
+        return False
+
+
+def download_pickles_from_google_drive(base_dir: str) -> bool:
+    """
+    Download pre-prepared pickle files from Google Drive.
+    
+    Args:
+        base_dir: Base directory to save pickles
+        
+    Returns:
+        True if download successful, False otherwise
+    """
+    pickles_dir = os.path.join(base_dir, 'Pickles')
+    os.makedirs(pickles_dir, exist_ok=True)
+    
+    # Google Drive file IDs from README
+    x_pickle_id = "1-ZQh_Ch7SwgSfBCw6TXOLgO8ZKgVxdS2"  # X.pickle (images)
+    y_pickle_id = "1-b38kY0LIErEWYR6VvNmxBePEDfQeZhd"  # y.pickle (labels)
+    
+    x_pickle_path = os.path.join(pickles_dir, 'X.pickle')
+    y_pickle_path = os.path.join(pickles_dir, 'y.pickle')
+    
+    logger.info("="*60)
+    logger.info("Downloading pre-prepared pickle files from Google Drive")
+    logger.info("="*60)
+    
+    success = True
+    
+    # Download X.pickle
+    if not os.path.exists(x_pickle_path):
+        logger.info("\nDownloading X.pickle (images)...")
+        if not download_from_google_drive(x_pickle_id, x_pickle_path):
+            logger.error("Failed to download X.pickle")
+            success = False
+    else:
+        logger.info("X.pickle already exists, skipping download")
+    
+    # Download y.pickle
+    if not os.path.exists(y_pickle_path):
+        logger.info("\nDownloading y.pickle (labels)...")
+        if not download_from_google_drive(y_pickle_id, y_pickle_path):
+            logger.error("Failed to download y.pickle")
+            success = False
+    else:
+        logger.info("y.pickle already exists, skipping download")
+    
+    if success:
+        logger.info("\n✓ All pickle files downloaded successfully!")
+        logger.info(f"Location: {pickles_dir}")
+    else:
+        logger.error("\n✗ Some downloads failed. Please try manual download:")
+        logger.error(f"  X.pickle: https://drive.google.com/file/d/{x_pickle_id}/view")
+        logger.error(f"  y.pickle: https://drive.google.com/file/d/{y_pickle_id}/view")
+    
+    return success
+
+
 def download_dataset(download_dir: str, is_colab: bool = False) -> bool:
     """
     Download the Dogs vs Cats dataset from Kaggle.
@@ -112,8 +245,25 @@ def download_dataset(download_dir: str, is_colab: bool = False) -> bool:
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to download dataset: {e}")
-        if e.stderr:
-            logger.error(f"Error output: {e.stderr}")
+        # Check both stdout and stderr for error messages
+        error_msg = (e.stderr or "") + (e.stdout or "")
+        if error_msg:
+            logger.error(f"Error output: {error_msg}")
+            
+            # Check for common errors
+            if "403" in error_msg or "Forbidden" in error_msg:
+                logger.error("\n" + "="*60)
+                logger.error("403 Forbidden Error - Competition Terms Not Accepted")
+                logger.error("="*60)
+                logger.error("\nTo fix this:")
+                logger.error("1. Go to: https://www.kaggle.com/c/dogs-vs-cats")
+                logger.error("2. Click 'Join Competition' or 'I Understand and Accept'")
+                logger.error("3. Accept the competition rules")
+                logger.error("4. Then try downloading again")
+                logger.error("\nAlternative download options:")
+                logger.error("1. Use pre-prepared pickles: python data_preparation.py --download-pickles")
+                logger.error("2. Manual download: See README.md for Google Drive links")
+                logger.error("="*60)
         return False
     except FileNotFoundError:
         logger.error("Kaggle CLI not found. Please install it with: pip install kaggle")
@@ -353,6 +503,11 @@ def main():
         help='Download dataset from Kaggle (requires Kaggle API setup)'
     )
     parser.add_argument(
+        '--download-pickles',
+        action='store_true',
+        help='Download pre-prepared pickle files from Google Drive (alternative to --download)'
+    )
+    parser.add_argument(
         '--base-dir',
         type=str,
         default=None,
@@ -390,6 +545,17 @@ def main():
     
     logger.info(f"Environment: {'Google Colab' if is_colab else 'Local'}")
     logger.info(f"Base directory: {base_dir}")
+    
+    # Download pre-prepared pickles from Google Drive if requested
+    if args.download_pickles:
+        if not download_pickles_from_google_drive(base_dir):
+            logger.error("Failed to download pickle files from Google Drive.")
+            logger.info("You can manually download from:")
+            logger.info("  X.pickle: https://drive.google.com/file/d/1-ZQh_Ch7SwgSfBCw6TXOLgO8ZKgVxdS2/view")
+            logger.info("  y.pickle: https://drive.google.com/file/d/1-b38kY0LIErEWYR6VvNmxBePEDfQeZhd/view")
+            sys.exit(1)
+        logger.info("Pickle files downloaded successfully! You can now use --verify-only to verify them.")
+        return
     
     # Download dataset if requested
     if args.download:
