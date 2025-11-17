@@ -89,11 +89,65 @@ pip install -r requirements.txt
 ```
 
 3. **(Optional) Setup Kaggle API** for dataset download:
+   
+   **Quick Setup:**
    - Go to [Kaggle Account Settings](https://www.kaggle.com/account)
    - Scroll down to the "API" section
    - Click "Create New API Token" to download `kaggle.json`
    - Run: `mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json`
-   - **Detailed instructions**: See [SETUP_KAGGLE.md](SETUP_KAGGLE.md) for step-by-step guide and troubleshooting
+   
+   **Detailed Setup:**
+   
+   **Step 1: Get Your Kaggle API Token**
+   1. Go to **https://www.kaggle.com/account**
+   2. Scroll down to the **"API"** section
+   3. Click **"Create New API Token"**
+   4. This will download a file named `kaggle.json` to your Downloads folder
+   
+   **Step 2: Place the Credentials File**
+   
+   **On Mac/Linux:**
+   ```bash
+   # Create the .kaggle directory if it doesn't exist
+   mkdir -p ~/.kaggle
+   
+   # Move the downloaded kaggle.json file
+   mv ~/Downloads/kaggle.json ~/.kaggle/
+   
+   # Set proper permissions (important!)
+   chmod 600 ~/.kaggle/kaggle.json
+   ```
+   
+   **On Windows:**
+   ```powershell
+   # Create the .kaggle directory
+   mkdir $env:USERPROFILE\.kaggle
+   
+   # Move the downloaded kaggle.json file
+   move $env:USERPROFILE\Downloads\kaggle.json $env:USERPROFILE\.kaggle\
+   ```
+   
+   **Step 3: Verify Setup**
+   ```bash
+   python -c "import kaggle; print('✓ Kaggle API is ready!')"
+   ```
+   
+   **Alternative: Manual Setup**
+   
+   If you prefer to create the file manually:
+   1. Create the directory: `~/.kaggle/` (or `C:\Users\<username>\.kaggle\` on Windows)
+   2. Create a file named `kaggle.json` in that directory
+   3. Add your credentials in this format:
+   ```json
+   {
+     "username": "your_kaggle_username",
+     "key": "your_api_key_here"
+   }
+   ```
+   
+   **Using Setup Scripts:**
+   - Run `python setup_kaggle.py` for interactive setup
+   - Or run `./setup_kaggle_quick.sh` after downloading kaggle.json
 
 ## 🏃 Quick Start
 
@@ -421,8 +475,10 @@ Simply download and place the pickle files in `CatsDogs/Pickles/` directory.
    - **Solution**: Install dependencies with `pip install -r requirements.txt`
 
 2. **Kaggle API Error / Missing Credentials**
-   - **Solution**: See [SETUP_KAGGLE.md](SETUP_KAGGLE.md) for detailed setup instructions
+   - **Solution**: Follow the detailed setup instructions in the Installation section above
    - Quick fix: Ensure `kaggle.json` is in `~/.kaggle/kaggle.json` (Mac/Linux) or `C:\Users\<username>\.kaggle\kaggle.json` (Windows)
+   - **File not found**: Make sure the file is named exactly `kaggle.json` (lowercase)
+   - **Permission denied**: On Mac/Linux, set permissions with `chmod 600 ~/.kaggle/kaggle.json`
    - **Alternative**: Skip download and use pre-prepared pickles from the Google Drive links below
 
 3. **Data Not Found**
