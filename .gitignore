@@ -20,6 +20,9 @@ ENV/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
+# Kaggle credentials (NEVER commit these!)
+kaggle.json
+
 # Data directories (optional - uncomment if you don't want to track data)
 # CatsDogs/
 # Results/
