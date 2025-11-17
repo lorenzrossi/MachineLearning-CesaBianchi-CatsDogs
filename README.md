@@ -157,13 +157,21 @@ Run the complete pipeline from data preparation to training:
 
 ```bash
 python main.py --prepare-data --download --train --blocks 3 --variant batchnorm --save-model --save-plot
+
+# Or use Google Drive pickles (no Kaggle API needed)
+python data_preparation.py --download-pickles
+python train_test.py --blocks 3 --variant batchnorm --epochs 50 --save-model --save-plot
 ```
 
 ### Option 2: Step by Step
 
-1. **Prepare the data**:
+1. **Prepare the data** (choose one method):
 ```bash
+# Option A: Download from Kaggle (requires Kaggle API setup)
 python data_preparation.py --download
+
+# Option B: Download pre-prepared pickles from Google Drive (recommended, no API needed)
+python data_preparation.py --download-pickles
 ```
 
 2. **Train a model**:
@@ -200,7 +208,7 @@ python main.py --prepare-data --download --train --blocks 3 --variant batchnorm 
 **Command Line Arguments:**
 
 - **Pipeline Control**: `--prepare-data`, `--train`
-- **Data Preparation Options**: `--download`, `--img-size`, `--channels`, `--no-shuffle`, `--verify-only`
+- **Data Preparation Options**: `--download`, `--download-pickles`, `--img-size`, `--channels`, `--no-shuffle`, `--verify-only`
 - **Training Options**: `--blocks`, `--variant`, `--epochs`, `--batch-size`, `--optimizer`, `--learning-rate`, `--test-size`, `--save-model`, `--save-plot`
 - **Common Options**: `--base-dir`, `--output-dir`
 
@@ -214,8 +222,11 @@ The `data_preparation.py` script downloads and preprocesses the dataset.
 # Process existing dataset (if you already have CatsDogs/Cats/ and CatsDogs/Dogs/ folders)
 python data_preparation.py
 
-# Download and process dataset from Kaggle
+# Download and process dataset from Kaggle (requires Kaggle API setup)
 python data_preparation.py --download
+
+# Download pre-prepared pickle files from Google Drive (recommended alternative)
+python data_preparation.py --download-pickles
 ```
 
 #### Custom Options
@@ -246,7 +257,8 @@ python data_preparation.py --download --channels 3 --img-size 150
 
 **Command Line Arguments:**
 
-- `--download`: Download dataset from Kaggle (requires Kaggle API setup)
+- `--download`: Download dataset from Kaggle (requires Kaggle API setup and accepting competition terms)
+- `--download-pickles`: Download pre-prepared pickle files from Google Drive (recommended alternative, no API needed)
 - `--base-dir PATH`: Base directory for dataset (default: auto-detect)
 - `--img-size SIZE`: Image size in pixels (default: 100)
 - `--channels CHANNELS`: Number of channels: 1 for grayscale, 3 for RGB (default: 1)
@@ -459,6 +471,14 @@ python main.py --base-dir /path/to/dataset --prepare-data --train
 
 If you prefer not to download from Kaggle, you can use pre-prepared data:
 
+**Option 1: Automated Download (Recommended)**
+```bash
+python data_preparation.py --download-pickles
+```
+This automatically downloads the pre-prepared pickle files from Google Drive.
+
+**Option 2: Manual Download**
+
 **Original Project Resources:**
 - **Notebooks repository**: https://drive.google.com/drive/folders/1m3UukrQ4htoX6rj_44pp2as6Af8N2Cvq?usp=share_link
 - **CatsDogs repository** (with all files): https://drive.google.com/drive/folders/1wDN-xlK4YvsqEa0t2lLZ0RSpFJU55ahW?usp=share_link
@@ -474,16 +494,19 @@ Simply download and place the pickle files in `CatsDogs/Pickles/` directory.
 1. **ModuleNotFoundError**
    - **Solution**: Install dependencies with `pip install -r requirements.txt`
 
-2. **Kaggle API Error / Missing Credentials**
+2. **Kaggle API Error / Missing Credentials / 403 Forbidden**
    - **Solution**: Follow the detailed setup instructions in the Installation section above
    - Quick fix: Ensure `kaggle.json` is in `~/.kaggle/kaggle.json` (Mac/Linux) or `C:\Users\<username>\.kaggle\kaggle.json` (Windows)
    - **File not found**: Make sure the file is named exactly `kaggle.json` (lowercase)
    - **Permission denied**: On Mac/Linux, set permissions with `chmod 600 ~/.kaggle/kaggle.json`
-   - **Alternative**: Skip download and use pre-prepared pickles from the Google Drive links below
+   - **403 Forbidden**: You need to accept the competition terms at https://www.kaggle.com/c/dogs-vs-cats
+   - **Alternative (Recommended)**: Use `python data_preparation.py --download-pickles` to download pre-prepared pickles from Google Drive (no API needed)
 
 3. **Data Not Found**
-   - **Solution**: Run data preparation first: `python data_preparation.py --download`
-   - Or download pre-prepared pickles from the Google Drive links above
+   - **Solution**: Run data preparation first:
+     - `python data_preparation.py --download` (requires Kaggle API)
+     - Or `python data_preparation.py --download-pickles` (recommended, no API needed)
+   - Or manually download pre-prepared pickles from the Google Drive links above
 
 4. **Memory Errors**
    - **Solution**: Reduce batch size or use a smaller model

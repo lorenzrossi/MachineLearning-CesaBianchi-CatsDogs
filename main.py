@@ -44,6 +44,8 @@ def run_data_preparation(args):
     
     if args.download:
         cmd.append('--download')
+    if args.download_pickles:
+        cmd.append('--download-pickles')
     if args.base_dir:
         cmd.extend(['--base-dir', args.base_dir])
     if args.img_size:
@@ -118,7 +120,10 @@ Examples:
   # Full pipeline: prepare data and train
   python main.py --prepare-data --download --train --blocks 3 --variant batchnorm
   
-  # Only prepare data
+  # Prepare data using Google Drive pickles (no Kaggle API needed)
+  python main.py --prepare-data --download-pickles
+  
+  # Only prepare data from Kaggle
   python main.py --prepare-data --download
   
   # Only train (data must be prepared first)
@@ -148,6 +153,11 @@ Examples:
         '--download',
         action='store_true',
         help='Download dataset from Kaggle (requires Kaggle API)'
+    )
+    data_group.add_argument(
+        '--download-pickles',
+        action='store_true',
+        help='Download pre-prepared pickle files from Google Drive (recommended alternative, no API needed)'
     )
     data_group.add_argument(
         '--img-size',
